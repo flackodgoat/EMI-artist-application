@@ -612,6 +612,7 @@
   name="emi-artist-registration"
   method="POST"
   enctype="multipart/form-data"
+  action="/api/send"
 >
         <input type="hidden" name="form-name" value="emi-artist-registration" />
 
@@ -1265,35 +1266,7 @@
           if (i === current) s.classList.add("active");
         });
       });
-      document
-  .getElementById("registrationForm")
-  .addEventListener("submit", async function (e) {
-    e.preventDefault();
-
-    const formData = new FormData(this);
-
-    const res = await fetch("/api/send", {
-      method: "POST",
-      body: formData
-    });
-
-    const result = await res.json();
-
-    if (result.success) {
-      const ref = "EMI-" + Date.now().toString(36).toUpperCase();
-
-      document.getElementById("refCode").textContent =
-        "Reference: " + ref;
-
-      this.style.display = "none";
-      document.getElementById("successScreen").style.display = "block";
-
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    } else {
-      alert("Submission failed");
-    }
-  });
-
+     
     
     </script>
   </body>
