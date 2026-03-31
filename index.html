@@ -607,13 +607,7 @@
 
     <!-- MAIN FORM -->
     <div class="main">
-      <form
-        id="registrationForm"
-        name="emi-artist-registration"
-        method="POST"
-        enctype="multipart/form-data"
-        action="/api/send"
-      >
+     <form id="registrationForm">
         <input type="hidden" name="form-name" value="emi-artist-registration" />
 
         <!-- SECTION 1 -->
@@ -1266,21 +1260,38 @@
           if (i === current) s.classList.add("active");
         });
       });
-
-      // Optional: Show success screen after submission
       document
-        .getElementById("registrationForm")
-        .addEventListener("submit", function (e) {
-          // Basin automatically redirects to a thank-you page, or you can use a hidden success screen
-          setTimeout(() => {
-            const ref = "EMI-" + Date.now().toString(36).toUpperCase();
-            document.getElementById("refCode").textContent =
-              "Reference: " + ref;
-            this.style.display = "none";
-            document.getElementById("successScreen").style.display = "block";
-            window.scrollTo({ top: 0, behavior: "smooth" });
-          }, 50);
-        });
+  .getElementById("registrationForm")
+  .addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const name = document.querySelector('[name="name"]').value;
+    const email = document.querySelector('[name="email"]').value;
+    const message = document.querySelector('[name="message"]').value;
+
+    const res = await fetch("/api/send", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ name, email, message })
+    });
+
+    const result = await res.json();
+
+    if (result.success) {
+      const ref = "EMI-" + Date.now().toString(36).toUpperCase();
+      document.getElementById("refCode").textContent = "Reference: " + ref;
+
+      this.style.display = "none";
+      document.getElementById("successScreen").style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      alert("Submission failed");
+    }
+  });
+
+    
     </script>
   </body>
 </html>
