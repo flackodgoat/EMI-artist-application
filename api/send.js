@@ -6,28 +6,42 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const { name, email, message } = req.body;
+  try {
 
-  const transporter = nodemailer.createTransport({
-    service: "gmail",
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
-    }
-  });
+    const { name, email, message } = req.body;
 
-  await transporter.sendMail({
-    from: email,
-    to: process.env.EMAIL_USER,
-    subject: "New EMI Artist Submission",
-    text: `
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS
+      }
+    });
+
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      replyTo: email,
+      to: process.env.EMAIL_USER,
+      subject: "New EMI Artist Submission",
+      text: `
 Name: ${name}
 Email: ${email}
 
 Message:
 ${message}
 `
-  });
+    });
 
-  res.status(200).json({ success: true });
-}
+    return res.status(200).json({ success: true });
+
+  } catch (error) {
+
+    console.error(error);
+
+    return res.status(500).json({
+      success: false,
+      error: "Email failed to send"
+    });
+
+  }
+}``
