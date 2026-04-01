@@ -12,16 +12,22 @@ export default async function handler(req, res) {
     return res.status(405).json({ message: "Method not allowed" });
   }
 
-  const form = formidable();
+  const form = formidable({
+    uploadDir: "/tmp",           // Important for Vercel
+    keepExtensions: true,
+    multiples: true,
+  });
 
   form.parse(req, async (err, fields, files) => {
     if (err) {
-      return res.status(500).json({ error: "Form parsing error" });
+      console.error("Form parse error:", err);
+      return res.status(500).json({ success: false, error: "Form parsing error" });
     }
 
-    const name = fields.name;
-    const email = fields.email;
-    const message = fields.message;
+    // fields come as arrays → take [0]
+    const name = fields.name?.[0] || "No name";
+    const email = fields.email?.[0] || "";
+    const message = fields.message?.[0] || "No message";
 
     try {
       const transporter = nodemailer.createTransport({
@@ -32,23 +38,44 @@ export default async function handler(req, res) {
         },
       });
 
+      // Build attachments if user uploaded files
+      const attachments = [];
+      if (files) {
+        Object.values(files).flat().forEach((file) => {
+          if (file && file.filepath) {
+            attachments.push({
+              filename: file.originalFilename || "uploaded-file",
+              path: file.filepath,
+            });
+          }
+        });
+      }
+
       await transporter.sendMail({
         from: process.env.EMAIL_USER,
+        replyTo: email,
         to: process.env.EMAIL_USER,
         subject: "New EMI Artist Submission",
-        text: `
-Name: ${name}
-Email: ${email}
-
-Message:
-${message}
-`,
+        html: `
+          <h2>New Artist Submission</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          <p><strong>Message:</strong></p>
+          <p>${message.replace(/\n/g, "<br>")}</p>
+          <hr>
+          <p><em>Files attached: ${attachments.length > 0 ? attachments.length : "None"}</em></p>
+        `,
+        attachments,   // ← files will be attached to the email
       });
 
-      res.status(200).json({ success: true });
+      console.log("✅ Email sent successfully");
+      return res.status(200).json({ success: true });
     } catch (error) {
-  console.error("EMAIL ERROR:", error);
-  res.status(500).json({ success: false, error: error.message });
-}
+      console.error("EMAIL ERROR:", error);
+      return res.status(500).json({ 
+        success: false, 
+        error: error.message 
+      });
+    }
   });
 }

@@ -1235,39 +1235,33 @@
       </div>
     </div>
 
-    <script>
-      // Scroll reveal
-      const sections = document.querySelectorAll(".form-section");
-      const observer = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              entry.target.classList.add("visible");
-            }
-          });
-        },
-        { threshold: 0.08 },
-      );
-      sections.forEach((s) => observer.observe(s));
+  <script>
+  document.getElementById("registrationForm").addEventListener("submit", async function (e) {
+    e.preventDefault();   // stops the white JSON page
 
-      // Progress bar
-      const steps = document.querySelectorAll(".progress-step");
-      const sectionIds = ["sec1", "sec2", "sec3", "sec4", "sec5"];
+    const formData = new FormData(this);
 
-      window.addEventListener("scroll", () => {
-        let current = 0;
-        sectionIds.forEach((id, i) => {
-          const el = document.getElementById(id);
-          if (el && window.scrollY + 200 >= el.offsetTop) current = i;
-        });
-        steps.forEach((s, i) => {
-          s.classList.remove("active", "done");
-          if (i < current) s.classList.add("done");
-          if (i === current) s.classList.add("active");
-        });
+    try {
+      const response = await fetch("/api/send", {
+        method: "POST",
+        body: formData,
       });
-     
-    
-    </script>
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert("✅ Submission successful! Thank you.");
+        this.reset();                    // clear the form
+        // Optional: scroll to top or show success message
+      } else {
+        alert("❌ Error: " + result.error);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong. Please try again.");
+    }
+  });
+</script>
+
   </body>
 </html>
